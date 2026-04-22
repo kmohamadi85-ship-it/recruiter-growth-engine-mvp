@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { OutreachGenerator } from '@/components/outreach-generator'
 import { ArrowLeft, MapPin, Briefcase, Star, Sparkles, Clock } from 'lucide-react'
+import type { Candidate, TalentMission } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,14 +23,14 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
 
   if (!link?.candidates) notFound()
 
-  const candidate = link.candidates as Record<string, unknown>
-  const mission = link.talent_missions as Record<string, unknown>
+  const candidate = link.candidates as unknown as Candidate
+  const mission = link.talent_missions as unknown as TalentMission
 
   const { data: outreachDraft } = await supabase
     .from('outreach_drafts')
     .select('*')
-    .eq('candidate_id', candidate.id as string)
-    .eq('mission_id', mission.id as string)
+    .eq('candidate_id', candidate.id)
+    .eq('mission_id', mission.id)
     .order('created_at', { ascending: false })
     .limit(1)
     .single()
@@ -52,26 +53,26 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
         </Link>
         <span className="text-gray-400 text-sm">Discovery Feed</span>
         <span className="text-gray-300">/</span>
-        <span className="text-gray-700 text-sm font-medium">{candidate.name as string}</span>
+        <span className="text-gray-700 text-sm font-medium">{candidate.name}</span>
       </div>
 
       {/* Hero */}
       <div className="flex items-start gap-6 mb-8">
         <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
-          {getInitials(candidate.name as string)}
+          {getInitials(candidate.name)}
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-bold text-gray-900">{candidate.name as string}</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{candidate.name}</h1>
             <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold border ${getScoreColor(link.match_score)}`}>
               <Star className="h-4 w-4" />
               {link.match_score} match
             </span>
           </div>
-          <p className="text-gray-600 mb-2">{candidate.current_role as string}</p>
+          <p className="text-gray-600 mb-2">{candidate.current_role || ""}</p>
           <div className="flex items-center gap-4 text-sm text-gray-500">
-            {candidate.location && <span className="flex items-center gap-1"><MapPin className="h-4 w-4" />{candidate.location as string}</span>}
-            {candidate.experience_years && <span className="flex items-center gap-1"><Briefcase className="h-4 w-4" />{candidate.experience_years as number} years experience</span>}
+            {candidate.location && <span className="flex items-center gap-1"><MapPin className="h-4 w-4" />{candidate.location || ""}</span>}
+            {candidate.experience_years && <span className="flex items-center gap-1"><Briefcase className="h-4 w-4" />{candidate.experience_years || 0} years experience</span>}
           </div>
         </div>
         <div className="flex gap-2">
@@ -93,7 +94,7 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-indigo-900 leading-relaxed">{candidate.ai_profile_summary as string}</p>
+                <p className="text-sm text-indigo-900 leading-relaxed">{candidate.ai_profile_summary || ""}</p>
               </CardContent>
             </Card>
           )}
@@ -119,16 +120,16 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
               <div className="flex items-start gap-3">
                 <div className="w-2 h-2 rounded-full bg-indigo-600 mt-2 flex-shrink-0"></div>
                 <div>
-                  <p className="font-medium text-gray-900 text-sm">{(candidate.current_role as string)?.split(' at ')[0]}</p>
-                  <p className="text-xs text-gray-500">{(candidate.current_role as string)?.split(' at ')[1] || 'Current Company'}</p>
+                  <p className="font-medium text-gray-900 text-sm">{(candidate.current_role || "")?.split(' at ')[0]}</p>
+                  <p className="text-xs text-gray-500">{(candidate.current_role || "")?.split(' at ')[1] || 'Current Company'}</p>
                   <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
                     <Clock className="h-3 w-3" />
-                    ~{candidate.experience_years as number} years total experience
+                    ~{candidate.experience_years || 0} years total experience
                   </div>
                 </div>
               </div>
               {candidate.summary && (
-                <p className="text-sm text-gray-600 mt-4 pt-4 border-t leading-relaxed">{candidate.summary as string}</p>
+                <p className="text-sm text-gray-600 mt-4 pt-4 border-t leading-relaxed">{candidate.summary || ""}</p>
               )}
             </CardContent>
           </Card>
@@ -140,9 +141,9 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
             </CardHeader>
             <CardContent>
               <OutreachGenerator
-                candidateId={candidate.id as string}
+                candidateId={candidate.id}
                 linkId={link.id}
-                missionId={mission.id as string}
+                missionId={mission.id}
                 existingDraft={outreachDraft || null}
               />
             </CardContent>
@@ -157,7 +158,7 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {((candidate.skills as string[]) || []).map((skill: string) => (
+                {(candidate.skills || []).map((skill: string) => (
                   <span key={skill} className="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-md">{skill}</span>
                 ))}
               </div>
@@ -170,11 +171,11 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
               <CardTitle className="text-sm text-gray-700">Matched Mission</CardTitle>
             </CardHeader>
             <CardContent>
-              <Link href={`/missions/${mission.id as string}`} className="text-sm text-indigo-600 hover:underline font-medium">
-                {mission.title as string}
+              <Link href={`/missions/${mission.id}`} className="text-sm text-indigo-600 hover:underline font-medium">
+                {mission.title || ""}
               </Link>
-              {mission.seniority && <p className="text-xs text-gray-500 mt-1">{mission.seniority as string}</p>}
-              {mission.industry && <p className="text-xs text-gray-500">{mission.industry as string}</p>}
+              {mission.seniority && <p className="text-xs text-gray-500 mt-1">{mission.seniority || ""}</p>}
+              {mission.industry && <p className="text-xs text-gray-500">{mission.industry || ""}</p>}
             </CardContent>
           </Card>
 

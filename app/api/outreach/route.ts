@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { openai } from '@/lib/openai'
+import { getOpenAI } from '@/lib/openai'
 
 async function generateOutreachMessages(candidateName: string, candidateRole: string, missionTitle: string, skills: string[]) {
   if (!process.env.OPENAI_API_KEY) {
@@ -26,11 +26,12 @@ Generate:
 Return ONLY valid JSON with keys: intro_message, followup_message, interview_invite. No markdown.`
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
       max_tokens: 1000,
+      stream: false,
     })
     const content = response.choices[0]?.message?.content || '{}'
     const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()

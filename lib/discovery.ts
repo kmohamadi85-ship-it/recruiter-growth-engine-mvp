@@ -1,4 +1,4 @@
-import { openai } from '@/lib/openai'
+import { getOpenAI } from '@/lib/openai'
 import type { TalentMission, GeneratedCandidate } from '@/lib/types'
 
 export async function generateCandidatesForMission(
@@ -42,7 +42,7 @@ Requirements:
 - All profiles must be completely fictional`
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {
@@ -52,6 +52,7 @@ Requirements:
       ],
       temperature: 0.8,
       max_tokens: 3000,
+      stream: false,
     })
 
     const content = response.choices[0]?.message?.content
@@ -169,7 +170,7 @@ export function generateMockCandidates(mission: TalentMission | Record<string, u
 
   // Include mission skills in the pool
   const missionSkills = m.skills || []
-  const combinedSkills = [...new Set([...missionSkills, ...skillPool])]
+  const combinedSkills = Array.from(new Set([...missionSkills, ...skillPool]))
 
   const candidates: GeneratedCandidate[] = []
 
